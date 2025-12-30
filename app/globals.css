@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+@layer components {
+  /* Button Variants */
+  .btn-primary {
+    padding: 0.625rem 1.25rem;
+    background-color: rgb(79 70 229);
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 150ms ease-in-out;
+  }
+
+  .btn-primary:hover {
+    background-color: rgb(67 56 202);
+  }
+
+  .btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(99 102 241 / 0.5);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    padding: 0.625rem 1.25rem;
+    background-color: white;
+    color: rgb(79 70 229);
+    border: 1px solid rgb(79 70 229);
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 150ms ease-in-out;
+  }
+
+  .btn-secondary:hover {
+    background-color: rgb(238 242 255);
+  }
+
+  .btn-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(99 102 241 / 0.5);
+  }
+
+  .btn-ghost {
+    padding: 0.625rem 1.25rem;
+    color: rgb(71 85 105);
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 150ms ease-in-out;
+  }
+
+  .btn-ghost:hover {
+    background-color: rgb(241 245 249);
+    color: rgb(15 23 42);
+  }
+
+  .btn-ghost:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(99 102 241 / 0.5);
+  }
+
+  .btn-danger {
+    padding: 0.625rem 1.25rem;
+    background-color: rgb(220 38 38);
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 150ms ease-in-out;
+  }
+
+  .btn-danger:hover {
+    background-color: rgb(185 28 28);
+  }
+
+  .btn-danger:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(239 68 68 / 0.5);
+  }
+
+  /* Input Styles */
+  .input-base {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    background-color: white;
+    border: 1px solid rgb(203 213 225);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 150ms ease-in-out;
+  }
+
+  .input-base::placeholder {
+    color: rgb(148 163 184);
+  }
+
+  .input-base:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(99 102 241);
+    border-color: rgb(99 102 241);
+  }
+
+  /* Card Styles */
+  .card {
+    background-color: white;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(226 232 240);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: box-shadow 150ms ease-in-out;
+  }
+
+  .card-hover {
+    background-color: white;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(226 232 240);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: box-shadow 150ms ease-in-out;
+  }
+
+  .card-hover:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  /* Badge Styles */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .badge-success {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgb(236 253 245);
+    color: rgb(4 120 87);
+  }
+
+  .badge-warning {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgb(254 252 232);
+    color: rgb(161 98 7);
+  }
+
+  .badge-error {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgb(254 242 242);
+    color: rgb(185 28 28);
+  }
+
+  .badge-info {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgb(239 246 255);
+    color: rgb(29 78 216);
+  }
+
+  .badge-neutral {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: rgb(241 245 249);
+    color: rgb(51 65 85);
+  }
+}
