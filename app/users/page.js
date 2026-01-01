@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { userAPI } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import toast from 'react-hot-toast'
 
-export default function UsersPage() {
+function UsersPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -541,5 +541,22 @@ export default function UsersPage() {
         </div>
       </div>
     </AdminLayout>
+  )
+}
+
+export default function UsersPage() {
+  return (
+    <Suspense fallback={
+      <AdminLayout>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="w-12 h-12 border-3 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto"></div>
+            <p className="mt-4 text-sm text-slate-600">Loading users...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    }>
+      <UsersPageContent />
+    </Suspense>
   )
 }
