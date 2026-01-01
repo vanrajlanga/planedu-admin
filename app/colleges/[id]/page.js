@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { collegeAPI } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
+import CollegeSubNav from '@/app/components/CollegeSubNav'
 import toast from 'react-hot-toast'
 
 export default function EditCollegePage() {
@@ -162,26 +163,17 @@ export default function EditCollegePage() {
 
   return (
     <AdminLayout>
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => router.push('/colleges')}
-            className="text-indigo-600 hover:text-indigo-800 font-medium mb-4 inline-flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Colleges
-          </button>
-          <h1 className="text-3xl font-bold text-slate-900">Edit College</h1>
-          <p className="text-slate-600 mt-1">Update college information</p>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Sub Navigation */}
+        <CollegeSubNav collegeId={collegeId} collegeName={college.college_name} />
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <div className="card p-6">
+        {/* Content Area */}
+        <div className="p-6">
+          <div className="max-w-4xl mx-auto">
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information */}
+              <div className="card p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Basic Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
@@ -541,25 +533,27 @@ export default function EditCollegePage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="btn-secondary"
-              disabled={saving}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="btn-secondary"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
           </div>
-        </form>
+        </div>
       </div>
     </AdminLayout>
   )

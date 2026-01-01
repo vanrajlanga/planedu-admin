@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { collegeAPI } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import toast from 'react-hot-toast'
@@ -571,7 +572,12 @@ export default function CollegesPage() {
                               </div>
                             )}
                             <div>
-                              <div className="font-semibold text-slate-900">{college.college_name}</div>
+                              <Link
+                                href={`/colleges/${college.college_id}`}
+                                className="font-semibold text-slate-900 hover:text-indigo-600 transition-colors"
+                              >
+                                {college.college_name}
+                              </Link>
                               <div className="text-sm text-slate-500 flex items-center gap-2">
                                 {college.short_name && <span>{college.short_name}</span>}
                                 {college.is_featured && (
@@ -624,12 +630,12 @@ export default function CollegesPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleOpenModal(college)}
+                            <Link
+                              href={`/colleges/${college.college_id}`}
                               className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
                             >
                               Edit
-                            </button>
+                            </Link>
                             <button
                               onClick={() => handleDeleteCollege(college.college_id, college.college_name)}
                               className="text-red-600 hover:text-red-800 text-sm font-medium"
