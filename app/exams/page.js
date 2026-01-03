@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '@/app/components/AdminLayout'
 import toast from 'react-hot-toast'
@@ -36,6 +36,7 @@ export default function ExamsPage() {
 
   const examLevels = ['National', 'State', 'University', 'International']
   const examModes = ['Online', 'Offline', 'Both']
+  const formRef = useRef(null)
 
   useEffect(() => {
     fetchExams()
@@ -136,15 +137,30 @@ export default function ExamsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.exam_name || !formData.exam_level || !formData.exam_mode) {
+    // Read values directly from DOM (handles Playwright/automation cases where React state isn't updated)
+    const form = formRef.current || document.querySelector('form')
+    const formValues = {
+      exam_name: form?.querySelector('[name="exam_name"]')?.value || formData.exam_name,
+      short_name: form?.querySelector('[name="short_name"]')?.value || formData.short_name,
+      slug: form?.querySelector('[name="slug"]')?.value || formData.slug,
+      exam_category: form?.querySelector('[name="exam_category"]')?.value || formData.exam_category,
+      conducting_body: form?.querySelector('[name="conducting_body"]')?.value || formData.conducting_body,
+      exam_level: form?.querySelector('[name="exam_level"]')?.value || formData.exam_level,
+      exam_mode: form?.querySelector('[name="exam_mode"]')?.value || formData.exam_mode,
+      official_website: form?.querySelector('[name="official_website"]')?.value || formData.official_website,
+      description: form?.querySelector('[name="description"]')?.value || formData.description,
+      is_active: form?.querySelector('[name="is_active"]')?.checked ?? formData.is_active
+    }
+
+    if (!formValues.exam_name || !formValues.exam_level || !formValues.exam_mode) {
       toast.error('Exam name, level, and mode are required')
       return
     }
 
     // Auto-generate slug if not provided
     const finalFormData = {
-      ...formData,
-      slug: formData.slug || generateSlug(formData.exam_name)
+      ...formValues,
+      slug: formValues.slug || generateSlug(formValues.exam_name)
     }
 
     try {
@@ -389,7 +405,7 @@ export default function ExamsPage() {
                 {editingExam ? 'Edit Exam' : 'Create New Exam'}
               </h2>
 
-              <form onSubmit={handleSubmit}>
+              <form ref={formRef} onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -398,6 +414,7 @@ export default function ExamsPage() {
                       </label>
                       <input
                         type="text"
+                        name="exam_name"
                         value={formData.exam_name}
                         onChange={(e) => setFormData({...formData, exam_name: e.target.value})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -412,6 +429,7 @@ export default function ExamsPage() {
                       </label>
                       <input
                         type="text"
+                        name="short_name"
                         value={formData.short_name}
                         onChange={(e) => setFormData({...formData, short_name: e.target.value})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -426,6 +444,7 @@ export default function ExamsPage() {
                     </label>
                     <input
                       type="text"
+                      name="slug"
                       value={formData.slug}
                       onChange={(e) => setFormData({...formData, slug: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -441,6 +460,7 @@ export default function ExamsPage() {
                       </label>
                       <input
                         type="text"
+                        name="exam_category"
                         value={formData.exam_category}
                         onChange={(e) => setFormData({...formData, exam_category: e.target.value})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -454,6 +474,7 @@ export default function ExamsPage() {
                       </label>
                       <input
                         type="text"
+                        name="conducting_body"
                         value={formData.conducting_body}
                         onChange={(e) => setFormData({...formData, conducting_body: e.target.value})}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -468,8 +489,9 @@ export default function ExamsPage() {
                         Exam Level <span className="text-red-500">*</span>
                       </label>
                       <select
+                        name="exam_level"
                         value={formData.exam_level}
-                        onChange={(e) => setFormData({...formData, exam_level: e.target.value})}
+                        onChange={(e) => setFormData(prev => ({...prev, exam_level: e.target.value}))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       >
@@ -485,8 +507,9 @@ export default function ExamsPage() {
                         Exam Mode <span className="text-red-500">*</span>
                       </label>
                       <select
+                        name="exam_mode"
                         value={formData.exam_mode}
-                        onChange={(e) => setFormData({...formData, exam_mode: e.target.value})}
+                        onChange={(e) => setFormData(prev => ({...prev, exam_mode: e.target.value}))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       >
@@ -504,6 +527,7 @@ export default function ExamsPage() {
                     </label>
                     <input
                       type="url"
+                      name="official_website"
                       value={formData.official_website}
                       onChange={(e) => setFormData({...formData, official_website: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -516,6 +540,7 @@ export default function ExamsPage() {
                       Description
                     </label>
                     <textarea
+                      name="description"
                       value={formData.description}
                       onChange={(e) => setFormData({...formData, description: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -528,6 +553,7 @@ export default function ExamsPage() {
                     <input
                       type="checkbox"
                       id="is_active"
+                      name="is_active"
                       checked={formData.is_active}
                       onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"

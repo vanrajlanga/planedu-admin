@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { courseAPI, collegeAPI } from '@/lib/api'
+import { courseAPI, collegeAPI, courseTypesAPI } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import toast from 'react-hot-toast'
 
@@ -10,6 +10,7 @@ export default function CoursesPage() {
   const router = useRouter()
   const [courses, setCourses] = useState([])
   const [colleges, setColleges] = useState([])
+  const [courseTypes, setCourseTypes] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
@@ -39,7 +40,7 @@ export default function CoursesPage() {
     college_id: '',
     course_name: '',
     short_name: '',
-    degree_type: 'Bachelor',
+    degree_type: '',
     duration: '',
     stream: '',
     specialization: '',
@@ -55,14 +56,29 @@ export default function CoursesPage() {
 
   useEffect(() => {
     fetchColleges()
+    fetchCourseTypes()
     fetchCourses()
   }, [filters])
+
+  const fetchCourseTypes = async () => {
+    try {
+      const response = await courseTypesAPI.getAll({ status: 'active' })
+      if (response.data.success) {
+        setCourseTypes(response.data.data || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch course types:', error)
+      setCourseTypes([])
+    }
+  }
 
   const fetchColleges = async () => {
     try {
       const response = await collegeAPI.getColleges({ limit: 1000, status: 'active' })
       if (response.data.success) {
-        setColleges(Array.isArray(response.data.data) ? response.data.data : [])
+        // API returns { data: { colleges: [...] } } structure
+        const collegesData = response.data.data?.colleges || response.data.data || []
+        setColleges(Array.isArray(collegesData) ? collegesData : [])
       }
     } catch (error) {
       console.error('Failed to fetch colleges:', error)
@@ -102,7 +118,7 @@ export default function CoursesPage() {
       college_id: '',
       course_name: '',
       short_name: '',
-      degree_type: 'Bachelor',
+      degree_type: '',
       duration: '',
       stream: '',
       specialization: '',
@@ -345,11 +361,11 @@ export default function CoursesPage() {
                 className="input-base"
               >
                 <option value="">All Types</option>
-                <option value="Bachelor">Bachelor</option>
-                <option value="Master">Master</option>
-                <option value="PhD">PhD</option>
-                <option value="Diploma">Diploma</option>
-                <option value="Certificate">Certificate</option>
+                {courseTypes.map(type => (
+                  <option key={type.course_type_id} value={type.name}>
+                    {type.name} - {type.full_name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -703,15 +719,23 @@ export default function CoursesPage() {
                       <select
                         name="degree_type"
                         value={formData.degree_type}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          const selectedType = courseTypes.find(t => t.name === e.target.value)
+                          setFormData({
+                            ...formData,
+                            degree_type: e.target.value,
+                            duration: selectedType ? `${selectedType.duration_years} Years` : formData.duration
+                          })
+                        }}
                         required
                         className="input-base"
                       >
-                        <option value="Bachelor">Bachelor</option>
-                        <option value="Master">Master</option>
-                        <option value="PhD">PhD</option>
-                        <option value="Diploma">Diploma</option>
-                        <option value="Certificate">Certificate</option>
+                        <option value="">Select Degree Type</option>
+                        {courseTypes.map(type => (
+                          <option key={type.course_type_id} value={type.name}>
+                            {type.name} - {type.full_name}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
