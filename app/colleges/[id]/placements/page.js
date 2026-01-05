@@ -2,11 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { collegeAPI, placementAPI, courseAPI, recruiterAPI } from '@/lib/api'
+import { collegeAPI, placementAPI, courseAPI, recruiterAPI, getBackendBaseUrl } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import CollegeSubNav from '@/app/components/CollegeSubNav'
 import SectionContentEditor from '@/app/components/SectionContentEditor'
 import toast from 'react-hot-toast'
+
+// Helper to get full image URL (handles both relative paths and full URLs)
+const getImageUrl = (url) => {
+  if (!url) return ''
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Replace localhost with backend URL for old data
+    if (url.includes('localhost:3000')) {
+      return url.replace('http://localhost:3000', getBackendBaseUrl())
+    }
+    return url
+  }
+  // Relative path - prepend backend URL
+  return `${getBackendBaseUrl()}${url}`
+}
 
 const ACADEMIC_YEARS = (() => {
   const years = []
@@ -596,7 +611,7 @@ export default function PlacementsPage() {
                         </div>
                         {recruiter.company_logo_url ? (
                           <img
-                            src={recruiter.company_logo_url}
+                            src={getImageUrl(recruiter.company_logo_url)}
                             alt={recruiter.company_name}
                             className="h-12 w-auto mx-auto mb-3 object-contain"
                           />

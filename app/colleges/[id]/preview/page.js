@@ -3,7 +3,19 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { collegeAPI, contentAPI, updatesAPI, galleryAPI, facultyAPI, hostelAPI, placementAPI, recruiterAPI, cutoffAPI, rankingAPI, courseAPI, reviewAPI, faqAPI, newsAPI, userAPI } from '@/lib/api'
+import { collegeAPI, contentAPI, updatesAPI, galleryAPI, facultyAPI, hostelAPI, placementAPI, recruiterAPI, cutoffAPI, rankingAPI, courseAPI, reviewAPI, faqAPI, newsAPI, userAPI, getBackendBaseUrl } from '@/lib/api'
+
+// Helper to get full image URL (handles both relative paths and full URLs)
+const getImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.includes('localhost:3000')) {
+      return url.replace('http://localhost:3000', getBackendBaseUrl())
+    }
+    return url
+  }
+  return `${getBackendBaseUrl()}${url}`
+}
 
 const SECTION_LABELS = {
   overview: 'Info',
@@ -238,7 +250,7 @@ function PreviewPageContent() {
                 {gallery.map((image) => (
                   <div key={image.id} className="rounded-lg overflow-hidden border border-gray-200">
                     <img
-                      src={image.image_url}
+                      src={getImageUrl(image.image_url)}
                       alt={image.caption || 'Gallery image'}
                       className="w-full h-48 object-cover"
                     />
@@ -271,7 +283,7 @@ function PreviewPageContent() {
                   <div key={member.id} className="border rounded-lg p-4 flex gap-4">
                     <div className="w-16 h-16 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden">
                       {member.profile_image_url ? (
-                        <img src={member.profile_image_url} alt={member.name} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(member.profile_image_url)} alt={member.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-xl font-bold text-gray-500">{member.name?.charAt(0)}</span>
                       )}
@@ -683,7 +695,7 @@ function PreviewPageContent() {
                     {article.featured_image_url && (
                       <div className="w-32 h-24 flex-shrink-0 rounded overflow-hidden">
                         <img
-                          src={article.featured_image_url}
+                          src={getImageUrl(article.featured_image_url)}
                           alt={article.title}
                           className="w-full h-full object-cover"
                         />
@@ -790,7 +802,7 @@ function PreviewPageContent() {
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         {c.logo_url ? (
-                          <img src={c.logo_url} alt={c.college_name} className="w-10 h-10 object-contain" />
+                          <img src={getImageUrl(c.logo_url)} alt={c.college_name} className="w-10 h-10 object-contain" />
                         ) : (
                           <span className="text-lg font-bold text-gray-500">{c.college_name?.charAt(0)}</span>
                         )}
@@ -862,7 +874,7 @@ function PreviewPageContent() {
                       <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
                         {student.profile_photo_url ? (
                           <img
-                            src={student.profile_photo_url}
+                            src={getImageUrl(student.profile_photo_url)}
                             alt={student.first_name || 'Student'}
                             className="w-12 h-12 rounded-full object-cover"
                           />
@@ -1002,7 +1014,7 @@ function PreviewPageContent() {
             <div className="w-24 h-24 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
               {college.logo_url ? (
                 <img
-                  src={college.logo_url}
+                  src={getImageUrl(college.logo_url)}
                   alt={college.college_name}
                   className="w-20 h-20 object-contain"
                 />
@@ -1085,7 +1097,7 @@ function PreviewPageContent() {
                 <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
                   {currentAuthor?.profile_image_url ? (
                     <img
-                      src={currentAuthor.profile_image_url}
+                      src={getImageUrl(currentAuthor.profile_image_url)}
                       alt={currentAuthor.name}
                       className="w-full h-full object-cover"
                     />

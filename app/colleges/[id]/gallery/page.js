@@ -17,6 +17,21 @@ const CATEGORIES = [
   { value: 'sports', label: 'Sports' },
 ]
 
+// Helper to get full image URL (handles both relative paths and full URLs)
+const getImageUrl = (url) => {
+  if (!url) return ''
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Replace localhost with backend URL for old data
+    if (url.includes('localhost:3000')) {
+      return url.replace('http://localhost:3000', getBackendBaseUrl())
+    }
+    return url
+  }
+  // Relative path - prepend backend URL
+  return `${getBackendBaseUrl()}${url}`
+}
+
 export default function GalleryPage() {
   const params = useParams()
   const collegeId = params.id
@@ -101,7 +116,7 @@ export default function GalleryPage() {
       caption: image.caption || '',
     })
     setSelectedFile(null)
-    setImagePreview(image.image_url || null)
+    setImagePreview(image.image_url ? getImageUrl(image.image_url) : null)
     setIsModalOpen(true)
   }
 
@@ -131,7 +146,8 @@ export default function GalleryPage() {
       setUploading(true)
       const response = await uploadAPI.uploadGalleryImage(selectedFile)
       if (response.data.success) {
-        const imageUrl = `${getBackendBaseUrl()}${response.data.data.url}`
+        // Store only the relative path in database
+        const imageUrl = response.data.data.url
         setFormData(prev => ({ ...prev, image_url: imageUrl }))
         toast.success('Image uploaded successfully')
       }
@@ -166,7 +182,8 @@ export default function GalleryPage() {
       if (selectedFile) {
         const uploadResponse = await uploadAPI.uploadGalleryImage(selectedFile)
         if (uploadResponse.data.success) {
-          imageUrl = `${getBackendBaseUrl()}${uploadResponse.data.data.url}`
+          // Store only the relative path in database
+          imageUrl = uploadResponse.data.data.url
         } else {
           toast.error('Failed to upload image')
           return
@@ -346,7 +363,7 @@ export default function GalleryPage() {
                       className="relative group rounded-lg overflow-hidden bg-gray-100 aspect-video"
                     >
                       <img
-                        src={image.image_url}
+                        src={getImageUrl(image.image_url)}
                         alt={image.caption || 'Gallery image'}
                         className="w-full h-full object-cover cursor-pointer"
                         onClick={() => setLightboxImage(image)}
@@ -529,7 +546,7 @@ export default function GalleryPage() {
             </svg>
           </button>
           <img
-            src={lightboxImage.image_url}
+            src={getImageUrl(lightboxImage.image_url)}
             alt={lightboxImage.caption || 'Gallery image'}
             className="max-w-full max-h-[90vh] object-contain"
             onClick={(e) => e.stopPropagation()}

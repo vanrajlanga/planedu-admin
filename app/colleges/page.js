@@ -3,9 +3,24 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { collegeAPI } from '@/lib/api'
+import { collegeAPI, getBackendBaseUrl } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import toast from 'react-hot-toast'
+
+// Helper to get full image URL (handles both relative paths and full URLs)
+const getImageUrl = (url) => {
+  if (!url) return ''
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Replace localhost with backend URL for old data
+    if (url.includes('localhost:3000')) {
+      return url.replace('http://localhost:3000', getBackendBaseUrl())
+    }
+    return url
+  }
+  // Relative path - prepend backend URL
+  return `${getBackendBaseUrl()}${url}`
+}
 
 export default function CollegesPage() {
   const router = useRouter()
@@ -560,7 +575,7 @@ export default function CollegesPage() {
                           <div className="flex items-center gap-3">
                             {college.logo_url ? (
                               <img
-                                src={college.logo_url}
+                                src={getImageUrl(college.logo_url)}
                                 alt={college.college_name}
                                 className="w-10 h-10 rounded-lg object-cover"
                               />

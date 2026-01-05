@@ -5,6 +5,21 @@ import { bannerAPI, uploadAPI, getBackendBaseUrl } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import toast from 'react-hot-toast'
 
+// Helper to get full image URL (handles both relative paths and full URLs)
+const getImageUrl = (url) => {
+  if (!url) return ''
+  // If it's already a full URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    // Replace localhost with backend URL for old data
+    if (url.includes('localhost:3000')) {
+      return url.replace('http://localhost:3000', getBackendBaseUrl())
+    }
+    return url
+  }
+  // Relative path - prepend backend URL
+  return `${getBackendBaseUrl()}${url}`
+}
+
 export default function BannersPage() {
   const [banners, setBanners] = useState([])
   const [loading, setLoading] = useState(true)
@@ -154,7 +169,8 @@ export default function BannersPage() {
       setUploading(true)
       const response = await uploadAPI.uploadBannerImage(selectedFile)
       if (response.data.success) {
-        const imageUrl = `${getBackendBaseUrl()}${response.data.data.url}`
+        // Store only the relative path in database
+        const imageUrl = response.data.data.url
         setFormData({...formData, image_url: imageUrl})
         toast.success('Image uploaded successfully')
       }
@@ -309,7 +325,7 @@ export default function BannersPage() {
               <div key={banner.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div className="aspect-video bg-gray-100">
                   <img
-                    src={banner.image_url}
+                    src={getImageUrl(banner.image_url)}
                     alt={banner.title}
                     className="w-full h-full object-cover"
                     onError={(e) => { e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E' }}
@@ -401,7 +417,7 @@ export default function BannersPage() {
                         {imagePreview || formData.image_url ? (
                           <div className="space-y-2">
                             <img
-                              src={imagePreview || formData.image_url}
+                              src={imagePreview || getImageUrl(formData.image_url)}
                               alt="Banner preview"
                               className="max-h-48 mx-auto rounded"
                             />

@@ -3,7 +3,19 @@
 import { useState, useEffect, use } from 'react'
 import AdminLayout from '../../../components/AdminLayout'
 import CollegeSubNav from '../../../components/CollegeSubNav'
-import { facultyAPI, collegeAPI } from '../../../../lib/api'
+import { facultyAPI, collegeAPI, getBackendBaseUrl } from '../../../../lib/api'
+
+// Helper to get full image URL (handles both relative paths and full URLs)
+const getImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.includes('localhost:3000')) {
+      return url.replace('http://localhost:3000', getBackendBaseUrl())
+    }
+    return url
+  }
+  return `${getBackendBaseUrl()}${url}`
+}
 
 const DESIGNATIONS = [
   'Professor',
@@ -339,7 +351,7 @@ export default function FacultyPage({ params }) {
                         <div className="flex-shrink-0">
                           {member.profile_image_url ? (
                             <img
-                              src={member.profile_image_url}
+                              src={getImageUrl(member.profile_image_url)}
                               alt={member.name}
                               className="h-12 w-12 rounded-full object-cover"
                             />
