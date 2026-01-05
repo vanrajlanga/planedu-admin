@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from 'react'
 import AdminLayout from '../components/AdminLayout'
 import RichTextEditor from '../components/RichTextEditor'
-import { courseLocationContentAPI, courseTypesAPI, authorAPI, uploadAPI } from '../../lib/api'
+import { courseLocationContentAPI, courseTypesAPI, uploadAPI } from '../../lib/api'
 
 export default function LocationContentPage() {
   const [courseTypes, setCourseTypes] = useState([])
   const [selectedCourseType, setSelectedCourseType] = useState(null)
   const [locations, setLocations] = useState({ cities: [], states: [] })
   const [selectedLocation, setSelectedLocation] = useState(null)
-  const [authors, setAuthors] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [locationsLoading, setLocationsLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -37,16 +37,16 @@ export default function LocationContentPage() {
   const fetchInitialData = async () => {
     try {
       setLoading(true)
-      const [typesRes, authorsRes] = await Promise.all([
-        courseTypesAPI.getAll({ status: 'active' }),
-        authorAPI.getAuthors()
-      ])
 
+      // Get current logged-in user from localStorage
+      const adminUserStr = localStorage.getItem('admin_user')
+      if (adminUserStr) {
+        setCurrentUser(JSON.parse(adminUserStr))
+      }
+
+      const typesRes = await courseTypesAPI.getAll({ status: 'active' })
       if (typesRes.data.success) {
         setCourseTypes(typesRes.data.data)
-      }
-      if (authorsRes.data.success && Array.isArray(authorsRes.data.data)) {
-        setAuthors(authorsRes.data.data)
       }
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -124,6 +124,7 @@ export default function LocationContentPage() {
         location_name: selectedLocation.name,
         location_slug: selectedLocation.location_slug,
         ...formData,
+        author_id: currentUser?.admin_id || null, // Auto-assign logged-in user as author
         status: publishStatus || formData.status
       }
 
@@ -346,32 +347,17 @@ export default function LocationContentPage() {
               </div>
             </div>
 
-            {/* Page Title & Author */}
+            {/* Page Title */}
             <div className="bg-white rounded-lg shadow p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
-                  <input
-                    type="text"
-                    value={formData.page_title}
-                    onChange={(e) => setFormData({ ...formData, page_title: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., B.Tech Colleges in Mumbai 2027"
-                  />
-                </div>
-                <div className="col-span-2 md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
-                  <select
-                    value={formData.author_id}
-                    onChange={(e) => setFormData({ ...formData, author_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select Author</option>
-                    {authors.map(author => (
-                      <option key={author.id || author.author_id} value={author.id || author.author_id}>{author.name}</option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
+                <input
+                  type="text"
+                  value={formData.page_title}
+                  onChange={(e) => setFormData({ ...formData, page_title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., B.Tech Colleges in Mumbai 2027"
+                />
               </div>
             </div>
 

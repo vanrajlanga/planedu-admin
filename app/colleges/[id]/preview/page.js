@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { collegeAPI, contentAPI, updatesAPI, authorAPI, galleryAPI, facultyAPI, hostelAPI, placementAPI, recruiterAPI, cutoffAPI, rankingAPI, courseAPI, reviewAPI, faqAPI, newsAPI, userAPI } from '@/lib/api'
+import { collegeAPI, contentAPI, updatesAPI, galleryAPI, facultyAPI, hostelAPI, placementAPI, recruiterAPI, cutoffAPI, rankingAPI, courseAPI, reviewAPI, faqAPI, newsAPI, userAPI } from '@/lib/api'
 
 const SECTION_LABELS = {
   overview: 'Info',
@@ -34,7 +34,6 @@ function PreviewPageContent() {
   const [college, setCollege] = useState(null)
   const [contentData, setContentData] = useState({})
   const [updates, setUpdates] = useState([])
-  const [authors, setAuthors] = useState({})
   const [gallery, setGallery] = useState([])
   const [faculty, setFaculty] = useState([])
   const [hostels, setHostels] = useState([])
@@ -68,14 +67,13 @@ function PreviewPageContent() {
       }
 
       const [
-        collegeRes, contentRes, updatesRes, authorsRes, galleryRes,
+        collegeRes, contentRes, updatesRes, galleryRes,
         facultyRes, hostelRes, placementRes, cutoffRes, rankingRes, courseRes,
         reviewRes, faqRes, newsRes
       ] = await Promise.all([
         collegeAPI.getCollege(collegeId),
         contentAPI.getAllContent(collegeId),
         safeFetch(updatesAPI.getUpdates(collegeId)),
-        safeFetch(authorAPI.getAuthorsList()),
         safeFetch(galleryAPI.getGallery(collegeId)),
         safeFetch(facultyAPI.getFaculty(collegeId)),
         safeFetch(hostelAPI.getHostels(collegeId)),
@@ -103,14 +101,6 @@ function PreviewPageContent() {
 
       if (updatesRes.data.success) {
         setUpdates(updatesRes.data.data?.updates || [])
-      }
-
-      if (authorsRes.data.success) {
-        const authorMap = {}
-        ;(authorsRes.data.data || []).forEach((author) => {
-          authorMap[author.id] = author
-        })
-        setAuthors(authorMap)
       }
 
       if (galleryRes.data.success) {
@@ -203,7 +193,16 @@ function PreviewPageContent() {
   }
 
   const currentContent = contentData[activeSection]
-  const currentAuthor = currentContent?.author_id ? authors[currentContent.author_id] : null
+  // Author info now comes directly from content (joined with admin_users in backend)
+  const currentAuthor = currentContent?.author_name ? {
+    name: currentContent.author_name,
+    designation: currentContent.author_designation || 'Content Writer',
+    profile_image_url: currentContent.author_image
+  } : null
+
+  // Sections that have blog/article content and should show author details
+  const sectionsWithContent = ['overview', 'courses', 'admission', 'cutoff', 'placement', 'scholarship']
+  const shouldShowAuthor = sectionsWithContent.includes(activeSection) && currentContent?.content
 
   const keyUpdates = updates.filter((u) => u.update_type === 'key_update')
   const otherUpdates = updates.filter((u) => u.update_type !== 'key_update')
@@ -1080,37 +1079,39 @@ function PreviewPageContent() {
         <div className="flex gap-6">
           {/* Left Column - Content */}
           <div className="flex-1 min-w-0">
-            {/* Author Info */}
-            <div className="bg-white rounded-lg p-4 mb-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                {currentAuthor?.profile_image_url ? (
-                  <img
-                    src={currentAuthor.profile_image_url}
-                    alt={currentAuthor.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">
-                    {currentAuthor?.name?.charAt(0) || 'A'}
-                  </div>
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-blue-600">
-                    {currentAuthor?.name || 'Content Team'}
-                  </span>
-                  {currentAuthor?.is_verified && (
-                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+            {/* Author Info - Only show on content sections */}
+            {shouldShowAuthor && (
+              <div className="bg-white rounded-lg p-4 mb-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                  {currentAuthor?.profile_image_url ? (
+                    <img
+                      src={currentAuthor.profile_image_url}
+                      alt={currentAuthor.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">
+                      {currentAuthor?.name?.charAt(0) || 'A'}
+                    </div>
                   )}
                 </div>
-                <div className="text-sm text-gray-500">
-                  {currentAuthor?.designation || 'Content Writer'} | Updated on - {formatDate(currentContent?.updated_at)}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-blue-600">
+                      {currentAuthor?.name || 'Content Team'}
+                    </span>
+                    {currentAuthor?.is_verified && (
+                      <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {currentAuthor?.designation || 'Content Writer'} | Updated on - {formatDate(currentContent?.updated_at)}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Key Updates Section */}
             {updates.length > 0 && (

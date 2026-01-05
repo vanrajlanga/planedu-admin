@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import AdminLayout from '../components/AdminLayout'
-import { coursePageContentAPI, authorAPI } from '../../lib/api'
+import { coursePageContentAPI } from '../../lib/api'
 
 export default function CoursePageContentPage() {
   const [courseTypes, setCourseTypes] = useState([])
-  const [authors, setAuthors] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
   const [selectedCourseType, setSelectedCourseType] = useState('')
   const [content, setContent] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -38,7 +38,11 @@ export default function CoursePageContentPage() {
 
   useEffect(() => {
     fetchCourseTypes()
-    fetchAuthors()
+    // Get current logged-in user from localStorage
+    const adminUserStr = localStorage.getItem('admin_user')
+    if (adminUserStr) {
+      setCurrentUser(JSON.parse(adminUserStr))
+    }
   }, [])
 
   useEffect(() => {
@@ -60,19 +64,6 @@ export default function CoursePageContentPage() {
     }
   }
 
-  const fetchAuthors = async () => {
-    try {
-      const res = await authorAPI.getAuthors()
-      if (res.data.success && Array.isArray(res.data.data)) {
-        setAuthors(res.data.data)
-      } else {
-        setAuthors([])
-      }
-    } catch (err) {
-      console.error('Failed to fetch authors:', err)
-      setAuthors([])
-    }
-  }
 
   const fetchContent = async (courseType) => {
     try {
@@ -133,7 +124,7 @@ export default function CoursePageContentPage() {
           top_specializations: formData.highlights_data.top_specializations.filter(s => s.trim() !== ''),
           top_exams: formData.highlights_data.top_exams.filter(e => e.trim() !== ''),
         },
-        author_id: formData.author_id || null,
+        author_id: currentUser?.admin_id || null, // Auto-assign logged-in user as author
       }
 
       const res = await coursePageContentAPI.update(selectedCourseType, cleanedData)
@@ -311,38 +302,18 @@ export default function CoursePageContentPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Author
-                    </label>
-                    <select
-                      value={formData.author_id}
-                      onChange={(e) => setFormData(prev => ({ ...prev, author_id: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="">Select Author</option>
-                      {authors.map(author => (
-                        <option key={author.id} value={author.id}>
-                          {author.name} - {author.designation}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Status
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="draft">Draft</option>
-                      <option value="published">Published</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
                 </div>
               </div>
             </div>

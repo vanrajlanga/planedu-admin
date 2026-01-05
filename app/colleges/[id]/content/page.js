@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { collegeAPI, contentAPI, authorAPI } from '@/lib/api'
+import { collegeAPI, contentAPI } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import CollegeSubNav from '@/app/components/CollegeSubNav'
 import RichTextEditor from '@/app/components/RichTextEditor'
@@ -28,7 +28,7 @@ export default function ContentEditorPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [college, setCollege] = useState(null)
-  const [authors, setAuthors] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
   const [selectedSection, setSelectedSection] = useState('overview')
   const [contentData, setContentData] = useState({})
   const [formData, setFormData] = useState({
@@ -51,18 +51,20 @@ export default function ContentEditorPage() {
   const fetchInitialData = async () => {
     try {
       setLoading(true)
-      const [collegeRes, authorsRes, contentRes] = await Promise.all([
+
+      // Get current logged-in user from localStorage
+      const adminUserStr = localStorage.getItem('admin_user')
+      if (adminUserStr) {
+        setCurrentUser(JSON.parse(adminUserStr))
+      }
+
+      const [collegeRes, contentRes] = await Promise.all([
         collegeAPI.getCollege(collegeId),
-        authorAPI.getAuthorsList(),
         contentAPI.getAllContent(collegeId),
       ])
 
       if (collegeRes.data.success) {
         setCollege(collegeRes.data.data)
-      }
-
-      if (authorsRes.data.success) {
-        setAuthors(authorsRes.data.data || [])
       }
 
       if (contentRes.data.success) {
@@ -110,6 +112,7 @@ export default function ContentEditorPage() {
       const dataToSave = {
         ...formData,
         status: publishStatus,
+        author_id: currentUser?.admin_id || null, // Auto-assign logged-in user as author
       }
 
       const response = await contentAPI.updateSection(collegeId, selectedSection, dataToSave)
@@ -153,12 +156,8 @@ export default function ContentEditorPage() {
   }
 
   const getAuthorName = () => {
-    const authorId = contentData[selectedSection]?.author_id
-    if (authorId) {
-      const author = authors.find((a) => a.id === authorId)
-      return author?.name || 'Unknown'
-    }
-    return null
+    // Use the current logged-in user as author
+    return currentUser?.name || currentUser?.email || null
   }
 
   if (loading) {
@@ -214,23 +213,6 @@ export default function ContentEditorPage() {
                       {SECTION_TYPES.map((section) => (
                         <option key={section.value} value={section.value}>
                           {section.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
-                    <select
-                      name="author_id"
-                      value={formData.author_id}
-                      onChange={handleInputChange}
-                      className="input-base min-w-[200px]"
-                    >
-                      <option value="">Select Author</option>
-                      {authors.map((author) => (
-                        <option key={author.id} value={author.id}>
-                          {author.name}
                         </option>
                       ))}
                     </select>

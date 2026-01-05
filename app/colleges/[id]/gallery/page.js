@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { collegeAPI, galleryAPI } from '@/lib/api'
+import { collegeAPI, galleryAPI, uploadAPI } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import CollegeSubNav from '@/app/components/CollegeSubNav'
 import toast from 'react-hot-toast'
@@ -30,6 +30,9 @@ export default function GalleryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingImage, setEditingImage] = useState(null)
   const [lightboxImage, setLightboxImage] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [uploading, setUploading] = useState(false)
 
   const [formData, setFormData] = useState({
     image_url: '',
@@ -85,6 +88,8 @@ export default function GalleryPage() {
       category: 'campus',
       caption: '',
     })
+    setSelectedFile(null)
+    setImagePreview(null)
     setIsModalOpen(true)
   }
 
@@ -95,28 +100,89 @@ export default function GalleryPage() {
       category: image.category || 'campus',
       caption: image.caption || '',
     })
+    setSelectedFile(null)
+    setImagePreview(image.image_url || null)
     setIsModalOpen(true)
+  }
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file')
+        return
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Image size should be less than 10MB')
+        return
+      }
+      setSelectedFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleUploadImage = async () => {
+    if (!selectedFile) {
+      toast.error('Please select an image first')
+      return
+    }
+
+    try {
+      setUploading(true)
+      const response = await uploadAPI.uploadGalleryImage(selectedFile)
+      if (response.data.success) {
+        const imageUrl = `http://localhost:3000${response.data.data.url}`
+        setFormData(prev => ({ ...prev, image_url: imageUrl }))
+        toast.success('Image uploaded successfully')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error(error.response?.data?.message || 'Failed to upload image')
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!formData.image_url || !formData.category) {
-      toast.error('Image URL and category are required')
+    // For new images, require a file to be selected
+    if (!editingImage && !selectedFile) {
+      toast.error('Please select an image')
+      return
+    }
+
+    if (!formData.category) {
+      toast.error('Please select a category')
       return
     }
 
     try {
       setSaving(true)
 
+      let imageUrl = formData.image_url
+
+      // Upload the file if a new file is selected
+      if (selectedFile) {
+        const uploadResponse = await uploadAPI.uploadGalleryImage(selectedFile)
+        if (uploadResponse.data.success) {
+          imageUrl = `http://localhost:3000${uploadResponse.data.data.url}`
+        } else {
+          toast.error('Failed to upload image')
+          return
+        }
+      }
+
+      const dataToSave = { ...formData, image_url: imageUrl }
+
       if (editingImage) {
-        const response = await galleryAPI.updateImage(collegeId, editingImage.id, formData)
+        const response = await galleryAPI.updateImage(collegeId, editingImage.id, dataToSave)
         if (response.data.success) {
           toast.success('Image updated successfully')
           fetchGallery()
         }
       } else {
-        const response = await galleryAPI.createImage(collegeId, formData)
+        const response = await galleryAPI.createImage(collegeId, dataToSave)
         if (response.data.success) {
           toast.success('Image added successfully')
           fetchGallery()
@@ -330,49 +396,72 @@ export default function GalleryPage() {
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setIsModalOpen(false)}></div>
-
-            <div className="inline-block w-full max-w-lg px-6 py-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {editingImage ? 'Edit Photo' : 'Add Photo'}
-                </h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-500">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl border border-gray-200">
+            <form onSubmit={handleSubmit}>
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {editingImage ? 'Edit Photo' : 'Add Photo'}
+                  </h3>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Modal Body */}
+              <div className="px-6 py-4 space-y-4">
+                {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Image URL <span className="text-red-500">*</span>
+                    Upload Image <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="https://example.com/image.jpg"
-                    required
-                  />
-                </div>
-
-                {formData.image_url && (
-                  <div className="border rounded-lg overflow-hidden">
-                    <img
-                      src={formData.image_url}
-                      alt="Preview"
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                      }}
-                    />
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    {imagePreview ? (
+                      <div className="space-y-3">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500 truncate">
+                            {selectedFile ? selectedFile.name : 'Current image'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedFile(null)
+                              setImagePreview(null)
+                              setFormData(prev => ({ ...prev, image_url: '' }))
+                            }}
+                            className="text-sm text-red-600 hover:text-red-700 ml-2"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center cursor-pointer py-6">
+                        <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-700">Click to select an image</span>
+                        <span className="text-xs text-gray-500 mt-1">PNG, JPG, GIF, WebP up to 10MB</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
                   </div>
-                )}
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -401,24 +490,26 @@ export default function GalleryPage() {
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    {saving ? 'Saving...' : editingImage ? 'Update Photo' : 'Add Photo'}
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : editingImage ? 'Update Photo' : 'Add Photo'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import AdminLayout from '../components/AdminLayout'
 import RichTextEditor from '../components/RichTextEditor'
-import { courseTypesAPI, coursePageContentAPI, authorAPI, uploadAPI } from '../../lib/api'
+import { courseTypesAPI, coursePageContentAPI, uploadAPI } from '../../lib/api'
 
 // Tab Components
 function CourseTypesTab() {
@@ -497,7 +497,7 @@ function CourseContentTab() {
   const [courseTypes, setCourseTypes] = useState([])
   const [selectedType, setSelectedType] = useState(null)
   const [existingContent, setExistingContent] = useState({})
-  const [authors, setAuthors] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -522,6 +522,13 @@ function CourseContentTab() {
   const fetchInitialData = async () => {
     try {
       setLoading(true)
+
+      // Get current logged-in user from localStorage
+      const adminUserStr = localStorage.getItem('admin_user')
+      if (adminUserStr) {
+        setCurrentUser(JSON.parse(adminUserStr))
+      }
+
       // Fetch course types from master
       const typesRes = await courseTypesAPI.getAll({ status: 'active' })
       if (typesRes.data.success) {
@@ -534,12 +541,6 @@ function CourseContentTab() {
         const contentMap = {}
         contentRes.data.data.forEach(c => { contentMap[c.course_type] = c })
         setExistingContent(contentMap)
-      }
-
-      // Fetch authors
-      const authorsRes = await authorAPI.getAuthors()
-      if (authorsRes.data.success && Array.isArray(authorsRes.data.data)) {
-        setAuthors(authorsRes.data.data)
       }
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -594,6 +595,7 @@ function CourseContentTab() {
       const payload = {
         course_type: contentKey,
         ...formData,
+        author_id: currentUser?.admin_id || null, // Auto-assign logged-in user as author
         status: publishStatus || formData.status
       }
 
@@ -730,32 +732,17 @@ function CourseContentTab() {
             </div>
           </div>
 
-          {/* Page Title & Author */}
+          {/* Page Title */}
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 md:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
-                <input
-                  type="text"
-                  value={formData.page_title}
-                  onChange={(e) => setFormData({ ...formData, page_title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., B.Tech Colleges in India 2026"
-                />
-              </div>
-              <div className="col-span-2 md:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
-                <select
-                  value={formData.author_id}
-                  onChange={(e) => setFormData({ ...formData, author_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select Author</option>
-                  {authors.map(author => (
-                    <option key={author.author_id} value={author.author_id}>{author.name}</option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
+              <input
+                type="text"
+                value={formData.page_title}
+                onChange={(e) => setFormData({ ...formData, page_title: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., B.Tech Colleges in India 2026"
+              />
             </div>
           </div>
 

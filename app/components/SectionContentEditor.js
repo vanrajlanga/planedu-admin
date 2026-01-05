@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { contentAPI, authorAPI } from '@/lib/api'
+import { contentAPI } from '@/lib/api'
 import RichTextEditor from './RichTextEditor'
 import toast from 'react-hot-toast'
 
@@ -18,7 +18,7 @@ import toast from 'react-hot-toast'
 export default function SectionContentEditor({ collegeId, sectionType, sectionLabel, collegeName }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [authors, setAuthors] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
   const [contentData, setContentData] = useState(null)
   const [isExpanded, setIsExpanded] = useState(true)
   const [showSeoFields, setShowSeoFields] = useState(false)
@@ -39,14 +39,14 @@ export default function SectionContentEditor({ collegeId, sectionType, sectionLa
   const fetchData = async () => {
     try {
       setLoading(true)
-      const [contentRes, authorsRes] = await Promise.all([
-        contentAPI.getSection(collegeId, sectionType),
-        authorAPI.getAuthorsList(),
-      ])
 
-      if (authorsRes.data.success) {
-        setAuthors(authorsRes.data.data || [])
+      // Get current logged-in user from localStorage
+      const adminUserStr = localStorage.getItem('admin_user')
+      if (adminUserStr) {
+        setCurrentUser(JSON.parse(adminUserStr))
       }
+
+      const contentRes = await contentAPI.getSection(collegeId, sectionType)
 
       if (contentRes.data.success) {
         const content = contentRes.data.data?.content
@@ -84,6 +84,7 @@ export default function SectionContentEditor({ collegeId, sectionType, sectionLa
       const dataToSave = {
         ...formData,
         status: publishStatus,
+        author_id: currentUser?.admin_id || null, // Auto-assign logged-in user as author
       }
 
       const response = await contentAPI.updateSection(collegeId, sectionType, dataToSave)
@@ -117,11 +118,8 @@ export default function SectionContentEditor({ collegeId, sectionType, sectionLa
   }
 
   const getAuthorName = () => {
-    if (contentData?.author_id) {
-      const author = authors.find((a) => a.id === contentData.author_id)
-      return author?.name || null
-    }
-    return null
+    // Author name comes directly from content (joined with admin_users in backend)
+    return contentData?.author_name || currentUser?.name || null
   }
 
   if (loading) {
@@ -173,24 +171,8 @@ export default function SectionContentEditor({ collegeId, sectionType, sectionLa
       {/* Expandable Content */}
       {isExpanded && (
         <div className="p-6 space-y-6">
-          {/* Author and SEO Toggle Row */}
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
-              <select
-                name="author_id"
-                value={formData.author_id}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="">Select Author</option>
-                {authors.map((author) => (
-                  <option key={author.id} value={author.id}>
-                    {author.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* SEO Toggle Row */}
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={() => setShowSeoFields(!showSeoFields)}
