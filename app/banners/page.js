@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { bannerAPI, uploadAPI } from '@/lib/api'
+import { bannerAPI, uploadAPI, getBackendBaseUrl } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import toast from 'react-hot-toast'
 
@@ -154,7 +154,7 @@ export default function BannersPage() {
       setUploading(true)
       const response = await uploadAPI.uploadBannerImage(selectedFile)
       if (response.data.success) {
-        const imageUrl = `http://localhost:3000${response.data.data.url}`
+        const imageUrl = `${getBackendBaseUrl()}${response.data.data.url}`
         setFormData({...formData, image_url: imageUrl})
         toast.success('Image uploaded successfully')
       }

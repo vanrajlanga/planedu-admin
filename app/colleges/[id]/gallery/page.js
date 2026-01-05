@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { collegeAPI, galleryAPI, uploadAPI } from '@/lib/api'
+import { collegeAPI, galleryAPI, uploadAPI, getBackendBaseUrl } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import CollegeSubNav from '@/app/components/CollegeSubNav'
 import toast from 'react-hot-toast'
@@ -131,7 +131,7 @@ export default function GalleryPage() {
       setUploading(true)
       const response = await uploadAPI.uploadGalleryImage(selectedFile)
       if (response.data.success) {
-        const imageUrl = `http://localhost:3000${response.data.data.url}`
+        const imageUrl = `${getBackendBaseUrl()}${response.data.data.url}`
         setFormData(prev => ({ ...prev, image_url: imageUrl }))
         toast.success('Image uploaded successfully')
       }
@@ -166,7 +166,7 @@ export default function GalleryPage() {
       if (selectedFile) {
         const uploadResponse = await uploadAPI.uploadGalleryImage(selectedFile)
         if (uploadResponse.data.success) {
-          imageUrl = `http://localhost:3000${uploadResponse.data.data.url}`
+          imageUrl = `${getBackendBaseUrl()}${uploadResponse.data.data.url}`
         } else {
           toast.error('Failed to upload image')
           return
