@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { collegeAPI, courseAPI } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import CollegeSubNav from '@/app/components/CollegeSubNav'
-import SectionContentEditor from '@/app/components/SectionContentEditor'
 import toast from 'react-hot-toast'
 
 const DEGREE_TYPES = [
@@ -273,14 +272,6 @@ export default function CoursesPage() {
                 </button>
               </div>
             </div>
-
-            {/* Content Editor Section */}
-            <SectionContentEditor
-              collegeId={collegeId}
-              sectionType="courses"
-              sectionLabel="Courses & Fees"
-              collegeName={college.college_name}
-            />
 
             {/* Courses Table */}
             <div className="bg-white rounded-lg shadow-sm border overflow-hidden">

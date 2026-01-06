@@ -3,7 +3,6 @@
 import { useState, useEffect, use } from 'react'
 import AdminLayout from '../../../components/AdminLayout'
 import CollegeSubNav from '../../../components/CollegeSubNav'
-import SectionContentEditor from '../../../components/SectionContentEditor'
 import { rankingAPI, collegeAPI } from '../../../../lib/api'
 
 // Common ranking categories
@@ -306,14 +305,6 @@ export default function RankingsPage({ params }) {
             )}
           </div>
         </div>
-
-        {/* Content Editor Section */}
-        <SectionContentEditor
-          collegeId={collegeId}
-          sectionType="ranking"
-          sectionLabel="Rankings"
-          collegeName={college.college_name}
-        />
 
         {/* Rankings List */}
         {loading ? (

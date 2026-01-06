@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { collegeAPI, placementAPI, courseAPI, recruiterAPI, getBackendBaseUrl } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import CollegeSubNav from '@/app/components/CollegeSubNav'
-import SectionContentEditor from '@/app/components/SectionContentEditor'
 import toast from 'react-hot-toast'
 
 // Helper to get full image URL (handles both relative paths and full URLs)
@@ -382,14 +381,6 @@ export default function PlacementsPage() {
                 </button>
               </div>
             </div>
-
-            {/* Content Editor Section */}
-            <SectionContentEditor
-              collegeId={collegeId}
-              sectionType="placement"
-              sectionLabel="Placements"
-              collegeName={college.college_name}
-            />
 
             {/* Summary Cards */}
             {placements.length > 0 && (

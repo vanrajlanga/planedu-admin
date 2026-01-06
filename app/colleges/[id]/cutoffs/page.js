@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { collegeAPI, cutoffAPI, examAPI, courseAPI } from '@/lib/api'
 import AdminLayout from '@/app/components/AdminLayout'
 import CollegeSubNav from '@/app/components/CollegeSubNav'
-import SectionContentEditor from '@/app/components/SectionContentEditor'
 import toast from 'react-hot-toast'
 
 const CATEGORIES = [
@@ -356,14 +355,6 @@ export default function CutoffsPage() {
                 )}
               </div>
             </div>
-
-            {/* Content Editor Section */}
-            <SectionContentEditor
-              collegeId={collegeId}
-              sectionType="cutoff"
-              sectionLabel="Cutoffs"
-              collegeName={college.college_name}
-            />
 
             {/* Cutoffs Display */}
             {cutoffs.length === 0 ? (
